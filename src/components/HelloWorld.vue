@@ -5,26 +5,26 @@
     <ul>
       <li>
         <a
-          href="https://vuejs.org"
+          href="http://localhost:3000/register"
           target="_blank"
         >
-          Core Docs
+          회원가입
         </a>
       </li>
       <li>
         <a
-          href="https://forum.vuejs.org"
+          href="http://localhost:3000/login"
           target="_blank"
         >
-          Forum
+          로그인
         </a>
       </li>
       <li>
         <a
-          href="https://chat.vuejs.org"
+          href="http://localhost:3000/waitroom"
           target="_blank"
         >
-          Community Chat
+          대기실
         </a>
       </li>
       <li>
@@ -32,7 +32,7 @@
           href="https://twitter.com/vuejs"
           target="_blank"
         >
-          Twitter
+          게임
         </a>
       </li>
       <br>

@@ -32,7 +32,7 @@ export default {
   },
   methods: {
     async submitForm () {
-      const url = 'http://localhost:8080/member-service/register'
+      const url = '/api/member-service/register'
       const data = {
         username: this.username,
         email: this.email,
