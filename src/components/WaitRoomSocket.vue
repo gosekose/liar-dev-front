@@ -60,41 +60,43 @@ export default {
   methods: {
     connect () {
       const accessToken =
-        'Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJjODdhZmQ0OS05NTZmLTRlNGMtOTgyOS1mMmYyNGExOTM2OTUiLCJhdXRoIjpbIlJPTEVfVVNFUiJdLCJpYXQiOjE2ODAwMDQ1NTQsImV4cCI6MTY4MDAyNjE2N30.9wxaR-OA57RcgDVnLHkX7qhO-P-Yf-nAwX8suh8rniZR1CReh923-tERsghBd20h-g9lK4FGUQATJRxXGDwGEQ'
+        'Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJjODdhZmQ0OS05NTZmLTRlNGMtOTgyOS1mMmYyNGExOTM2OTUiLCJhdXRoIjpbIlJPTEVfVVNFUiJdLCJpYXQiOjE2ODAwNzc5MzAsImV4cCI6MTY4MDA5OTYxMH0.lAfKTw8gRDAgyGnIsDFO8waCEcMAZVSEgHkmORMQVt2yz7wEQWnV2Qa58d-ftM35x24SoEogD_tXA5vapotUVw'
       const refreshToken =
-        'eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJjODdhZmQ0OS05NTZmLTRlNGMtOTgyOS1mMmYyNGExOTM2OTUiLCJhdXRoIjpbIlJPTEVfVVNFUiJdLCJpYXQiOjE2ODAwMDQ1NTQsImV4cCI6MTY4MDYwOTM2N30.kzTzeGLRkgBrSkZoZXUCOMqH21RCESPhoDQYBP5nrqmgTUiR3XXXN14PMio4KIxT29NCBcsrcWmqQCK7BgQSDg'
-      const userId = '1e619b70-bffa-4f4c-8fe5-deb70492c907'
+        'eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJjODdhZmQ0OS05NTZmLTRlNGMtOTgyOS1mMmYyNGExOTM2OTUiLCJhdXRoIjpbIlJPTEVfVVNFUiJdLCJpYXQiOjE2ODAwNzc5MzAsImV4cCI6MTY4MDY4Mjc3NH0.YVDAJQGfi-NxCM7sTPshyCZw_6uSdHEhB1GO3xEvk3lVuJ3DvvcJCFMMzoDZApTjRQmW15D4kZsR6veaIRdLQw'
+      const userId = 'c87afd49-956f-4e4c-9829-f2f24a193695'
       const socket = new SockJS('/api/wait-service/wait-websocket', {}, {transports: ['websocket', 'xhr-streaming', 'xhr-polling']})
-      this.stompClient = Stomp.over(socket)
-      this.stompClient.heartbeat.outgoing = 20000 // 클라이언트가 서버로 하트비트를 보낼 간격(밀리초)
-      this.stompClient.heartbeat.incoming = 20000
-      this.stompClient.connect((frame) => {
-        this.connected = true
-        // console.log('Connected: ' + frame)
-        console.log('test Connection')
+      // const socket = new WebSocket('/api/wait-service/wait-websocket')
 
-        const waitRoomId = this.channel
-        this.stompClient.send(
-          `/api/waitroom/pub/${waitRoomId}/join`,
-          {
-            'Authorization': accessToken,
-            'RefreshToken': refreshToken,
-            'UserId': userId
-          },
+      this.stompClient = Stomp.over(socket)
+      this.stompClient.heartbeat.outgoing = 0 // 클라이언트가 서버로 하트비트를 보낼 간격(밀리초)
+      this.stompClient.heartbeat.incoming = 0
+
+      const waitRoomId = this.channel
+      const headers = {
+        'Authorization': accessToken,
+        'RefreshToken': refreshToken,
+        'UserId': userId,
+        'WaitRoomId': waitRoomId,
+        'destination': `/wait-service/waitroom/sub/${waitRoomId}/join`
+      }
+
+      console.log(`/api/wait-service/waitroom/sub/${waitRoomId}/join`)
+      console.log('waitRoomId = ', waitRoomId)
+      this.stompClient.connect(headers, (frame) => {
+        console.log('frame = ', frame)
+        this.stompClient.subscribe(
+          `/wait-service/waitroom/sub/${waitRoomId}/join`, headers, (chatMessageResponse) => {
+            console.log(chatMessageResponse)
+          }, (error) => {
+            console.log(error)
+          })
+        this.stompClient.send(`/wait-service/waitroom/pub/${waitRoomId}/join`, headers,
           JSON.stringify({
             userId: userId,
             roomId: waitRoomId
-          })
-        )
-        this.stompClient.subscribe(`/api/waitroom/sub/${waitRoomId}/join`, (chatMessageResponse) => {
-          const message = JSON.parse(chatMessageResponse.body)
-          console.log('Message:', message)
-          this.showGreeting(message.content)
-          console.log('UserId:', message.userId)
-          console.log('JoinStatus:', message.joinStatus)
-          console.log('CreatedAt:', message.createdAt)
-        })
+          }))
       })
+      this.connected = true
     },
     disconnect () {
       if (this.stompClient !== null) {
