@@ -60,16 +60,16 @@ export default {
   methods: {
     connect () {
       const accessToken =
-        'Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJjODdhZmQ0OS05NTZmLTRlNGMtOTgyOS1mMmYyNGExOTM2OTUiLCJhdXRoIjpbIlJPTEVfVVNFUiJdLCJpYXQiOjE2ODAwNzc5MzAsImV4cCI6MTY4MDA5OTYxMH0.lAfKTw8gRDAgyGnIsDFO8waCEcMAZVSEgHkmORMQVt2yz7wEQWnV2Qa58d-ftM35x24SoEogD_tXA5vapotUVw'
+        'Bearer eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJjODdhZmQ0OS05NTZmLTRlNGMtOTgyOS1mMmYyNGExOTM2OTUiLCJhdXRoIjpbIlJPTEVfVVNFUiJdLCJpYXQiOjE2ODAxMTAxOTAsImV4cCI6MTY4MDEzMTgxNH0.R1VRQ-TnZZFz-gDLQ8YUY7LPR9NAOD6UAeWztCaV2vlm0sdlYplm8uz3Y4KJTmvneG8A8opso6MGHS7utZP6Dg'
       const refreshToken =
-        'eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJjODdhZmQ0OS05NTZmLTRlNGMtOTgyOS1mMmYyNGExOTM2OTUiLCJhdXRoIjpbIlJPTEVfVVNFUiJdLCJpYXQiOjE2ODAwNzc5MzAsImV4cCI6MTY4MDY4Mjc3NH0.YVDAJQGfi-NxCM7sTPshyCZw_6uSdHEhB1GO3xEvk3lVuJ3DvvcJCFMMzoDZApTjRQmW15D4kZsR6veaIRdLQw'
+        'eyJhbGciOiJIUzUxMiJ9.eyJzdWIiOiJjODdhZmQ0OS05NTZmLTRlNGMtOTgyOS1mMmYyNGExOTM2OTUiLCJhdXRoIjpbIlJPTEVfVVNFUiJdLCJpYXQiOjE2ODAxMTAxOTAsImV4cCI6MTY4MDcxNTA0NH0.kmdtldnAE5EHaoiSmRkp8uz9M1Yk3xbURwVaea3RSLK5_xDX4xcm5ht1xl0uNM5N2TcvwYu-CVH31OfUfDIPoQ'
       const userId = 'c87afd49-956f-4e4c-9829-f2f24a193695'
       const socket = new SockJS('/api/wait-service/wait-websocket', {}, {transports: ['websocket', 'xhr-streaming', 'xhr-polling']})
       // const socket = new WebSocket('/api/wait-service/wait-websocket')
 
       this.stompClient = Stomp.over(socket)
-      this.stompClient.heartbeat.outgoing = 0 // 클라이언트가 서버로 하트비트를 보낼 간격(밀리초)
-      this.stompClient.heartbeat.incoming = 0
+      this.stompClient.heartbeat.outgoing = 25000 // 클라이언트가 서버로 하트비트를 보낼 간격(밀리초)
+      this.stompClient.heartbeat.incoming = 25000
 
       const waitRoomId = this.channel
       const headers = {
@@ -85,11 +85,19 @@ export default {
       this.stompClient.connect(headers, (frame) => {
         console.log('frame = ', frame)
         this.stompClient.subscribe(
-          `/wait-service/waitroom/sub/${waitRoomId}/join`, headers, (chatMessageResponse) => {
-            console.log(chatMessageResponse)
+          `/wait-service/waitroom/sub/${waitRoomId}/join`, (chatMessageResponse) => {
+            console.log('log', JSON.stringify(chatMessageResponse))
           }, (error) => {
             console.log(error)
           })
+
+        this.stompClient.subscribe(
+          `/user/queue/errors`, headers, (chatMessageResponse) => {
+            console.log('log', JSON.stringify(chatMessageResponse))
+          }, (error) => {
+            console.log(error)
+          })
+
         this.stompClient.send(`/wait-service/waitroom/pub/${waitRoomId}/join`, headers,
           JSON.stringify({
             userId: userId,
